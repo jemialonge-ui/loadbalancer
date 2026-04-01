@@ -9,11 +9,6 @@ variable "rsa_number_of_bits" {
     default     = 2048
 }
 
-#variable "filename" {
-#    description = "The name of the file to save the private key"
-#    type        = string
-#}
-
 variable "file_permission" {
     description = "The file permission for the private key file"
     type        = string

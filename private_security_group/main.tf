@@ -20,7 +20,7 @@ resource "aws_security_group" "alb_to_ec2_web_sg" {
   #  cidr_blocks = [var.load_balancer_security_group_id]
   #}
 
-  #ingress {
+  #ingress {  ##load balancer does not need to run docker in these instances, so this rule is not necessary
   #  description = "Allow app traffic from the load balancer"
   #  from_port   = 8000
   #  to_port     = 8100

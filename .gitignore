@@ -11,3 +11,5 @@
 crash.log
 *.tfvars
 *.tfvars.json
+*.pem
+*.pem.pub

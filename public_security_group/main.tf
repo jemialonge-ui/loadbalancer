@@ -11,7 +11,7 @@ resource "aws_security_group" "public_web_sg" {
     security_groups = [var.load_balancer_security_group_id]
   }
 
-  ingress {
+  ingress {   ##Allow SSH traffic from the internet to the load balancer. This rule is not necessary for the load balancer to work, but it can be useful if you want to ssh into the EC2 instances for troubleshooting or other purposes.
     description = "Allow SSH traffic"
     from_port   = 22
     to_port     = 22
@@ -19,7 +19,7 @@ resource "aws_security_group" "public_web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
+  ingress {   ##For docker app traffic, if needed. This rule is not necessary for the load balancer to work, but it can be useful if you want to run docker in these instances and access the app directly without going through the load balancer.
     description = "Allow app traffic"
     from_port   = 8000
     to_port     = 8100

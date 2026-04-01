@@ -4,6 +4,12 @@ variable "region_name" {
   default     = "us-east-1"
 }
 
+variable "aws_provider_version" {
+  description = "The version of the AWS provider to use"
+  type        = string
+  default     = "~> 4.0"
+}
+
 variable "environment_name" {
   description = "The name of the environment"
   type        = string
@@ -28,7 +34,6 @@ variable "availability_zones_suffix" {
   default     = ["a", "b"]
 }
 
-
 variable "ami_image_id" {
   description = "The AMI image ID to use for the EC2 instances"
   type        = string
@@ -52,9 +57,37 @@ variable "volume_size_gb" {
   type        = number
   default     = 30
 }
-
 variable "volume_type_name" {
   description = "The type of the EBS volume"
   type        = string
   default     = "gp2"
+}
+
+variable "ebs_volume_size_gb" {
+  description = "The size of the EBS volume in GB"
+  type        = number
+  default     = 40
+}
+variable "ebs_volume_type_name" {
+  description = "The type of the EBS volume"
+  type        = string
+  default     = "gp3"
+}
+
+variable "devices_names_for_volume_attachments" {
+  description = "The device name to attach the EBS volume to the EC2 instance"
+  type        = list(string)
+  default     = ["/dev/sdf", "/dev/sdg"]  
+}
+
+variable "rsa_number_of_bits" {
+  description = "The number of bits for the RSA key pair"
+  type        = number
+  default     = 4096
+}
+
+variable "file_permission" {
+  description = "The file permission for the private key file"
+  type        = number
+  default     = 400
 }

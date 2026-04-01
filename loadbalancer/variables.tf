@@ -10,10 +10,6 @@ variable "subnet_ids" {
     description = "The IDs of the subnets where the load balancer will be created"
 }
 
-#variable "availability_zone_suffix" {
-#    description = "The suffix for the availability zones"
-#}
-
 variable "security_groups_for_lb_id" {
     description = "The IDs of the security groups for the load balancer"
 }

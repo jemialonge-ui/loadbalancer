@@ -24,3 +24,13 @@ output "dev_loadbalancer_dns" {
   description       = "The DNS name of the load balancer"
   value             = module.alb_dev.loadbalancer_dns
 }
+
+output "volume_details" {
+  description = "The details of the EBS volume"
+  value       = module.volume_dev.ebs_details
+}
+
+output "EC2_names" {
+    description = "The names of the EC2 instances"
+    value       = [module.ec2_dev1.EC2-name, module.ec2_dev2.EC2-name]  
+}

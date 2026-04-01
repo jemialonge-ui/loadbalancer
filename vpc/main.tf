@@ -8,7 +8,7 @@ resource "aws_vpc" "main_vpc" {
     enable_dns_support = true
 
     tags = {
-        Name = "${var.env_name}-vpc"
+        Name = "${var.env_name}-${var.region_name}-vpc"
     }
 }
 
@@ -43,7 +43,7 @@ resource "aws_subnet" "private_subnet" {
     }
 }
 
-#locals {
+#locals { ##  Did not want to use locals for now
 #  # Combine AZs with public subnet IDs for the for_each loop
 #  nat_gateway_config = { for i, az in var.availabilityzone_suffix : az => {
 #    public_subnet_id = aws_subnet.public_subnet[i].id
