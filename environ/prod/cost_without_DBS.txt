@@ -1,0 +1,54 @@
+Project: main
+
+Name                                                         Monthly Qty  Unit                    Monthly Cost   
+                                                                                                                  
+module.vpc_dev.aws_nat_gateway.main_nat_gw_private[0]                                                            
+├─NAT gateway                                                       730  hours                         $32.85   
+└─Data processed                                      Monthly cost depends on usage: $0.045 per GB              
+                                                                                                            
+module.vpc_dev.aws_nat_gateway.main_nat_gw_private[1]                                                            
+├─NAT gateway                                                       730  hours                         $32.85   
+└─Data processed                                      Monthly cost depends on usage: $0.045 per GB              
+                                                                                                            
+module.alb_dev.aws_lb.app_lb                                                                                     
+├─Application load balancer                                         730  hours                         $16.43   
+└─Load balancer capacity units                        Monthly cost depends on usage: $5.84 per LCU              
+                                                                                                            
+module.ec2_dev1.aws_instance.ec2_instance                                                                        
+├─Instance usage (Linux/UNIX, on-demand, t2.micro)                  730  hours                          $8.47   
+└─root_block_device                                                                                             
+   └─Storage (general purpose SSD, gp2)                              30  GB                             $3.00   
+                                                                                                            
+module.ec2_dev2.aws_instance.ec2_instance                                                                        
+├─Instance usage (Linux/UNIX, on-demand, t2.micro)                  730  hours                          $8.47   
+└─root_block_device                                                                                             
+   └─Storage (general purpose SSD, gp2)                              30  GB                             $3.00   
+                                                                                                            
+module.volume_dev.aws_ebs_volume.volume_here[0]                                                                  
+└─Storage (general purpose SSD, gp2)                                 30  GB                             $3.00   
+                                                                                                            
+module.volume_dev.aws_ebs_volume.volume_here[1]                                                                  
+└─Storage (general purpose SSD, gp2)                                 30  GB                             $3.00   
+                                                                                                            
+module.s3_dev.aws_s3_bucket.my_bucket                                                                            
+└─Standard                                                                                                      
+   ├─Storage                                          Monthly cost depends on usage: $0.023 per GB              
+   ├─PUT, COPY, POST, LIST requests                   Monthly cost depends on usage: $0.005 per 1k requests     
+   ├─GET, SELECT, and all other requests              Monthly cost depends on usage: $0.0004 per 1k requests    
+   ├─Select data scanned                              Monthly cost depends on usage: $0.002 per GB              
+   └─Select data returned                             Monthly cost depends on usage: $0.0007 per GB             
+                                                                                                           
+OVERALL TOTAL                                                                                         $111.06 
+
+*Usage costs can be estimated by updating Infracost Cloud settings, see docs for other options.
+
+──────────────────────────────────
+30 cloud resources were detected:
+∙ 8 were estimated
+∙ 22 were free
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Project                                            ┃ Baseline cost ┃ Usage cost* ┃ Total cost ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━╋━━━━━━━━━━━━┫
+┃ main                                               ┃          $111 ┃           - ┃       $111 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━┛
