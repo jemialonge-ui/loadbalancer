@@ -16,6 +16,12 @@ variable "environment_name" {
   default     = "dev" 
 }
 
+variable "vpc_cidr_block" {
+  description = "The CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
 variable "cidrs_for_the_ec2_instances" {
   description = "List of CIDR blocks for the EC2 instances"
   type        = list(string)
@@ -28,17 +34,17 @@ variable "cidrs_for_the_public_subnets" {
   default     = ["10.0.3.0/24", "10.0.4.0/24"]
 }
 
-variable "availability_zones_suffix" {
+variable "availability_zones_suffices" {
   description = "List of availability zone suffixes for the EC2 instances"
   type        = list(string)
   default     = ["a", "b"]
 }
 
-variable "ami_image_id" {
-  description = "The AMI image ID to use for the EC2 instances"
-  type        = string
-  default     = "ami-0c94855ba95c71c99" # Amazon Linux 2 AMI (HVM), SSD Volume Type
-}
+#variable "ami_image_id" {
+#  description = "The AMI image ID to use for the EC2 instances"
+#  type        = string
+#  default     = "ami-0c94855ba95c71c99" # Amazon Linux 2 AMI (HVM), SSD Volume Type
+#}
 
 variable "instance_type" {
   description = "The instance type for the EC2 instances"
@@ -90,4 +96,58 @@ variable "file_permission" {
   description = "The file permission for the private key file"
   type        = number
   default     = 400
+}
+
+variable "db_name" {
+  description = "The name of the database"
+  type        = string
+  default     = "dev_db"
+}
+
+variable "allocated_storage_gb" {
+  description = "The allocated storage for the database instance in GB"
+  type        = number
+  default     = 20
+}
+
+variable "db_engine" {
+  description = "The database engine to use (e.g., mysql, postgres)"
+  type        = string
+  default     = "mysql"
+}
+
+variable "db_engine_version" {
+  description = "The version of the database engine"
+  type        = string
+  default     = "8.0"
+}
+
+variable "db_instance_class" {
+  description = "The instance class for the database instance (e.g., db.t2.micro)"
+  type        = string
+  default     = "db.t3.micro" ## because db.t2.micro did not have the ability to support encryption, which is required for the database instance.
+}
+
+variable "db_username" { ## We will put a more secure username in a secret manager for the prod environment, but for dev, this is fine.
+  description = "The username for the database instance"
+  type        = string
+  default     = "admin"
+}
+
+variable "db_password" { ## We will put a more secure password in a secret manager for the prod environment, but for dev, this is fine.
+  description = "The password for the database instance"
+  type        = string
+  default     = "password123"
+}
+
+variable "default_db_name" {
+  description = "The name of the default database created in the RDS instance"
+  type        = string
+  default     = "demo1"
+}
+
+variable "db_volume_storage_type" {
+  description = "The type of storage type for the volume of the RDS instance"
+  type        = string
+  default     = "gp2"
 }

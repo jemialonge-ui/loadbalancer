@@ -1,0 +1,218 @@
+#!/bin/bash
+
+# Enable logs
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1 ##This did not work for some reason, I am commenting it out for now, but I will try to figure out how to enable logging for the user data script later.
+
+# Set mysql config variables
+#export db_endpoint="dev-db.cwreso00ulm4.us-east-1.rds.amazonaws.com" don't forget to adjust this
+export db_bad_endpoint="${DB_ENDPOINT}"
+export db_endpoint=$(echo $db_bad_endpoint | sed 's/:3306//')
+export db_username="${DB_USR}"
+export db_user_password="${DB_PASSWRD}"
+export db_name="${DEFAULT_DB_NAME}" 
+export EC2_server_name="${EC2_server_name}"
+
+
+# update the amazon EC2 server
+sudo yum update -y
+
+sudo amazon-linux-extras enable php8.2
+sudo yum clean metadata  
+
+# install apache, mysql, php and its additionnal packages
+sudo yum install httpd php php-mysqlnd php-fpm mariadb -y ## I am not installing mariadb-server because we are using RDS for the database, so we do not need to install a local database server on the EC2 instance.
+
+# start the httpd daemon
+sudo systemctl start httpd
+
+# enable the httpd daemon
+#sudo systemctl enable httpd
+
+# get the status of htpd daemon
+sudo systemctl status httpd
+
+# Start and enable php-fpm
+sudo systemctl start php-fpm
+sudo systemctl enable php-fpm
+
+# Fix SELinux to allow PHP to connect to DB
+sudo setsebool -P httpd_can_network_connect_db 1
+sudo setsebool -P httpd_can_network_connect 1
+
+# start mysql service 
+#sudo systemctl start mariadb --- IGNORE --- we are not starting mariadb because we are using RDS for the database, so we do not need to start a local database server on the EC2 instance.
+
+# enable mysql service
+#sudo systemctl enable mariadb --- IGNORE --- we are not enabling mariadb because we are using RDS for the database, so we do not need to enable a local database server on the EC2 instance.
+
+# Change OWNER and permission of directory /var/www
+sudo usermod -a -G apache ec2-user
+sudo chown -R ec2-user:apache /var/www
+find /var/www -type d -exec chmod 2775 {} \;
+find /var/www -type f -exec chmod 0664 {} \;
+
+
+echo "Cleaning /var/www/html"
+rm -rf /var/www/html/*
+
+# AUTOMATIC mysql_secure_installation
+
+# View databases on the remote database server
+echo "Showing the database\n"
+mysql -h $db_endpoint -u $db_username -p$db_user_password -e "show databases;"
+
+## some php code
+cd /var/www
+
+mkdir -p /var/www/inc
+cd /var/www/inc
+
+cat <<EOF >/var/www/inc/dbinfo.inc
+<?php
+
+define('DB_SERVER', '$db_endpoint');
+define('DB_USERNAME', '$db_username');
+define('DB_DATABASE', '$db_name');
+define('DB_PASSWORD', '$db_user_password');
+define('EC2_server_name', '$EC2_server_name');
+?>
+EOF
+
+cd /var/www/html
+
+cat <<'EOF' >/var/www/html/index.php
+<?php include "/var/www/inc/dbinfo.inc"; ?>
+<html>
+<body>
+<h1>Homepage</h1>
+<?php
+
+  echo "Connecting from " . EC2_server_name ." to database...<br>";
+  /*echo "test code line that should be deleted DB_SERVER: " . DB_SERVER . "<br>";*/   
+  /*echo "test code line that should be deleted DB_USERNAME: " . DB_USERNAME . "<br>";*/
+  /*echo "test code line that should be deleted DB_PASSWORD: " . DB_PASSWORD . "<br>";*/
+
+  $connection = mysqli_init();
+  mysqli_options($connection, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
+  mysqli_real_connect($connection, DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE, 3306, NULL, MYSQLI_CLIENT_FOUND_ROWS);
+  mysqli_set_charset($connection, "utf8");
+  /*$connection = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);*/
+  /*mysqli_set_charset($connection, 'utf8');*/
+
+  if (mysqli_connect_errno()) echo "Failed to connect to MySQL: " . mysqli_connect_error();
+
+  $database = mysqli_select_db($connection, DB_DATABASE);
+
+  /* Ensure that the EMPLOYEES table exists. */
+  VerifyEmployeesTable($connection, DB_DATABASE);
+
+  /* If input fields are populated, add a row to the EMPLOYEES table. */
+  $employee_name = htmlentities($_POST['NAME']);
+  $employee_address = htmlentities($_POST['ADDRESS']);
+
+  if (strlen($employee_name) || strlen($employee_address)) {
+    AddEmployee($connection, $employee_name, $employee_address);
+  }
+?>
+
+<!-- Input form -->
+<form action="<?PHP echo $_SERVER['SCRIPT_NAME'] ?>" method="POST">
+  <table border="0">
+    <tr>
+      <td>NAME</td>
+      <td>ADDRESS</td>
+    </tr>
+    <tr>
+      <td>
+        <input type="text" name="NAME" maxlength="45" size="30" />
+      </td>
+      <td>
+        <input type="text" name="ADDRESS" maxlength="90" size="60" />
+      </td>
+      <td>
+        <input type="submit" value="Add Data" />
+      </td>
+    </tr>
+  </table>
+</form>
+
+<!-- Display table data. -->
+<table border="1" cellpadding="2" cellspacing="2">
+  <tr>
+    <td>ID</td>
+    <td>NAME</td>
+    <td>ADDRESS</td>
+  </tr>
+
+<?php
+
+$result = mysqli_query($connection, "SELECT * FROM EMPLOYEES");
+
+while($query_data = mysqli_fetch_row($result)) {
+  echo "<tr>";
+  echo "<td>",$query_data[0], "</td>",
+       "<td>",$query_data[1], "</td>",
+       "<td>",$query_data[2], "</td>";
+  echo "</tr>";
+}
+?>
+
+</table>
+
+<!-- Clean up. -->
+<?php
+
+  mysqli_free_result($result);
+  mysqli_close($connection);
+
+?>
+
+</body>
+</html>
+
+
+<?php
+
+/* Add an employee to the table. */
+function AddEmployee($connection, $name, $address) {
+   $n = mysqli_real_escape_string($connection, $name);
+   $a = mysqli_real_escape_string($connection, $address);
+
+   $query = "INSERT INTO EMPLOYEES (NAME, ADDRESS) VALUES ('$n', '$a');";
+
+   if(!mysqli_query($connection, $query)) echo("<p>Error adding employee data.</p>");
+}
+
+/* Check whether the table exists and, if not, create it. */
+function VerifyEmployeesTable($connection, $dbName) {
+  if(!TableExists("EMPLOYEES", $connection, $dbName))
+  {
+     $query = "CREATE TABLE EMPLOYEES (
+         ID int(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+         NAME VARCHAR(45),
+         ADDRESS VARCHAR(90)
+       )";
+
+     if(!mysqli_query($connection, $query)) echo("<p>Error creating table.</p>");
+  }
+}
+
+/* Check for the existence of a table. */
+function TableExists($tableName, $connection, $dbName) {
+  $t = mysqli_real_escape_string($connection, $tableName);
+  $d = mysqli_real_escape_string($connection, $dbName);
+
+  $checktable = mysqli_query($connection,
+      "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_NAME = '$t' AND TABLE_SCHEMA = '$d'");
+
+  if(mysqli_num_rows($checktable) > 0) return true;
+
+  return false;
+}
+?>
+EOF
+
+# Enable Apache and mysql and restart Apache
+sudo systemctl enable  httpd
+#sudo systemctl enable mysqld --- IGNORE --- we are not enabling mysqld because we are using RDS for the database, so we do not need to enable a local database server on the EC2 instance.
+sudo systemctl restart httpd

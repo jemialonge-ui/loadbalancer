@@ -51,14 +51,25 @@ resource "aws_subnet" "private_subnet" {
 #    }
 #  } 
 #}
-
-resource "aws_nat_gateway" "main_nat_gw_private" {
-    connectivity_type = "private"
-    count             = length(var.availabilityzone_suffix)
-    subnet_id         = aws_subnet.private_subnet[count.index].id
+resource "aws_eip" "nat_gw_eip" {  ## Decided to add Elastic IPs for the NAT gateways to make sure they each have a static public IP address
+    count = length(var.availabilityzone_suffix)
+    depends_on = [ aws_internet_gateway.main_igw ]
 
     tags = {
-        Name = "${var.vpc_name}-private-nat-gw"
+        Name = "${var.vpc_name}-nat-gw-eip"
+        Terraform = "true"
+    }
+  
+}
+
+resource "aws_nat_gateway" "main_nat_gw_private" { ## The NAT gateway is in the public subnet
+    count             = length(var.availabilityzone_suffix)
+    depends_on        = [ aws_eip.nat_gw_eip ]
+    subnet_id         = aws_subnet.public_subnet[count.index].id
+    allocation_id     = aws_eip.nat_gw_eip[count.index].id
+
+    tags = {
+        Name = "${var.vpc_name}-public-nat-gw"
     }
 }
 

@@ -34,3 +34,8 @@ output "EC2_names" {
     description = "The names of the EC2 instances"
     value       = [module.ec2_dev1.EC2-name, module.ec2_dev2.EC2-name]  
 }
+
+output "db_endpoint" {
+    description = "The endpoint of the RDS database instance"
+    value       = module.dev_database.db_endpoint
+}

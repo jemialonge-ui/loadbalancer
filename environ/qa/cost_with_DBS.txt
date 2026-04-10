@@ -1,0 +1,65 @@
+[1mProject:[22m main
+
+ [4mName[24m                                                            [4mMonthly Qty[24m  [4mUnit[24m                    [4mMonthly Cost[24m   
+                                                                                                                     
+ [1mmodule.vpc_qa.aws_nat_gateway.main_nat_gw_private[0][22m                                                                
+ [2m├─[22m NAT gateway                                                          730  hours                         $32.85   
+ [2m└─[22m Data processed                                         Monthly cost depends on usage: $0.045 per GB              
+                                                                                                                     
+ [1mmodule.vpc_qa.aws_nat_gateway.main_nat_gw_private[1][22m                                                                
+ [2m├─[22m NAT gateway                                                          730  hours                         $32.85   
+ [2m└─[22m Data processed                                         Monthly cost depends on usage: $0.045 per GB              
+                                                                                                                     
+ [1mmodule.alb_qa.aws_lb.app_lb[22m                                                                                         
+ [2m├─[22m Application load balancer                                            730  hours                         $16.43   
+ [2m└─[22m Load balancer capacity units                           Monthly cost depends on usage: $5.84 per LCU              
+                                                                                                                     
+ [1mmodule.qa_database.aws_db_instance.db_instance[22m                                                                      
+ [2m├─[22m Database instance (on-demand, Single-AZ, db.t3.micro)                730  hours                         $12.41   
+ [2m└─[22m Storage (general purpose SSD, gp2)                                    20  GB                             $2.30   
+                                                                                                                     
+ [1mmodule.ec2_qa1.aws_instance.ec2_instance[22m                                                                            
+ [2m├─[22m Instance usage (Linux/UNIX, on-demand, t2.micro)                     730  hours                          $8.47   
+ [2m└─[22m root_block_device                                                                                                
+ [2m   └─[22m Storage (general purpose SSD, gp2)                                 30  GB                             $3.00   
+                                                                                                                     
+ [1mmodule.ec2_qa2.aws_instance.ec2_instance[22m                                                                            
+ [2m├─[22m Instance usage (Linux/UNIX, on-demand, t2.micro)                     730  hours                          $8.47   
+ [2m└─[22m root_block_device                                                                                                
+ [2m   └─[22m Storage (general purpose SSD, gp2)                                 30  GB                             $3.00   
+                                                                                                                     
+ [1mmodule.volume_qa.aws_ebs_volume.volume_here[0][22m                                                                      
+ [2m└─[22m Storage (general purpose SSD, gp3)                                    40  GB                             $3.20   
+                                                                                                                     
+ [1mmodule.volume_qa.aws_ebs_volume.volume_here[1][22m                                                                      
+ [2m└─[22m Storage (general purpose SSD, gp3)                                    40  GB                             $3.20   
+                                                                                                                     
+ [1mmodule.qa_database.aws_kms_key.my_kms_key[22m                                                                           
+ [2m├─[22m Customer master key                                                    1  months                         $1.00   
+ [2m├─[22m Requests                                               Monthly cost depends on usage: $0.03 per 10k requests     
+ [2m├─[22m ECC GenerateDataKeyPair requests                       Monthly cost depends on usage: $0.10 per 10k requests     
+ [2m└─[22m RSA GenerateDataKeyPair requests                       Monthly cost depends on usage: $0.10 per 10k requests     
+                                                                                                                     
+ [1mmodule.s3_qa.aws_s3_bucket.my_bucket[22m                                                                                
+ [2m└─[22m Standard                                                                                                         
+ [2m   ├─[22m Storage                                             Monthly cost depends on usage: $0.023 per GB              
+ [2m   ├─[22m PUT, COPY, POST, LIST requests                      Monthly cost depends on usage: $0.005 per 1k requests     
+ [2m   ├─[22m GET, SELECT, and all other requests                 Monthly cost depends on usage: $0.0004 per 1k requests    
+ [2m   ├─[22m Select data scanned                                 Monthly cost depends on usage: $0.002 per GB              
+ [2m   └─[22m Select data returned                                Monthly cost depends on usage: $0.0007 per GB             
+                                                                                                                     
+[1m OVERALL TOTAL[22m                                                                                            $127.17 
+
+*Usage costs can be estimated by updating Infracost Cloud settings, see docs for other options.
+
+──────────────────────────────────
+37 cloud resources were detected:
+∙ 10 were estimated
+∙ 26 were free
+∙ 1 is not supported yet, rerun with --show-skipped to see details
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Project                                            ┃ Baseline cost ┃ Usage cost* ┃ Total cost ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━╋━━━━━━━━━━━━┫
+┃ main                                               ┃          $127 ┃           - ┃       $127 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━┛

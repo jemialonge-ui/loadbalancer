@@ -19,3 +19,8 @@ variable "load_balancer_security_group_id" {
     description = "The ID of the load balancer security group to allow traffic from"
     type        = string
 }
+
+variable "rds_security_group_id" {
+    description = "The ID of the RDS security group to allow traffic to the database from the EC2 instances"
+    type        = string
+}

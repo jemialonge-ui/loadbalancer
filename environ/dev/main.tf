@@ -3,6 +3,11 @@ provider "aws" {
   #version = var.aws_provider_version
 }
 
+module "ami_dev" {
+  source              = "../../ami"
+  region_name         = var.region_name
+}
+
 module "s3_dev" {
   source              = "../../s3"
   bucket_name         = var.s3_bucket_name
@@ -20,10 +25,11 @@ module "key_pair_dev" {
 module "vpc_dev" {
   source              = "../../vpc"
   vpc_name            = "${var.environment_name}-${var.region_name}-vpc"
+  cidr_block          = var.vpc_cidr_block
   env_name            = var.region_name
   cidrs_for_public_subnets = var.cidrs_for_the_public_subnets
   region_name         = var.region_name
-  availabilityzone_suffix  = var.availability_zones_suffix
+  availabilityzone_suffix  = var.availability_zones_suffices
   cidrs_for_private_subnets  = var.cidrs_for_the_ec2_instances  ##private_cidr_block  = "
 }
 
@@ -33,6 +39,7 @@ module "dev_security_group" {
   project_name        = "${var.environment_name}_project"
   vpc_id              = module.vpc_dev.vpc_id
   load_balancer_security_group_id = module.dev_alb_security_group.security_group_id
+  rds_security_group_id = module.dev_db_security_group.security_group_id
 }
 
 module "dev_alb_security_group" {
@@ -42,10 +49,37 @@ module "dev_alb_security_group" {
   vpc_id              = module.vpc_dev.vpc_id
 }
 
+module "dev_db_security_group" {
+  source              = "../../db_security_group"
+  security_group_name = "${var.environment_name}_db_sg"
+  environment_name    = "${var.environment_name}"
+  vpc_id              = module.vpc_dev.vpc_id
+  full_vpc_cidr_block = "${var.vpc_cidr_block}"
+}
+
+module "dev_database" { ##RDS database needs to be in a private subnet, so using the first private subnet for the database subnet group  
+  source              = "../../database"
+  #db_instance_name    = "${var.environment_name}-db-instance"
+  allocated_storage   = var.allocated_storage_gb
+  db_storage_type     = var.db_volume_storage_type
+  db_engine           = var.db_engine
+  db_engine_version      = var.db_engine_version
+  db_instance_class      = var.db_instance_class
+  db_environment_name    = var.environment_name
+  #identifier             = var.db_name
+  db_username            = var.db_username
+  db_password         = var.db_password
+  default_database_name = var.default_db_name
+  db_security_group_ids = [module.dev_db_security_group.security_group_id]
+  db_subnet_ids       = module.vpc_dev.Private_subnet_ids
+  db_availability_zones_suffices = var.availability_zones_suffices
+  db_region_name         = var.region_name 
+}
+
 module "ec2_dev1" {
   source              = "../../ec2"
-  ec2_instance_name   = "${var.environment_name}-${var.region_name}-${var.availability_zones_suffix[1]}-ec2-instance"
-  ami_id              = var.ami_image_id
+  ec2_instance_name   = "${var.environment_name}-${var.region_name}-${var.availability_zones_suffices[1]}-ec2-instance"
+  ami_id              = module.ami_dev.ami_id
   instance_type       = var.instance_type
   subnet_id           = module.vpc_dev.Public_subnet_ids[0]
   volume_size         = var.volume_size_gb
@@ -55,21 +89,31 @@ module "ec2_dev1" {
   security_group_ids  = [module.dev_security_group.security_group_id]
   region_name         = var.region_name
   key_name_input      = "${module.key_pair_dev.key_pairname}"
-  user_data_input = <<-EOF
-                        #!/bin/bash
-                        yum update -y
-                        yum install -y httpd
-                        systemctl start httpd
-                        systemctl enable httpd
-                        echo "Hello, World! From EC2 Dev1" > /var/www/html/index.html
-                        systemctl restart httpd
-                        EOF
+  #user_data_input = <<-EOF       ##leaving the user data commented out, so that I can know what it initially looked like before I added the database connection info to it using the templatefile function
+  #                      #!/bin/bash
+  #                      yum update -y
+  #                      yum install -y httpd
+  #                      systemctl start httpd
+  #                      systemctl enable httpd
+  #                      echo "Hello, World! From EC2 Dev1" > /var/www/html/index.html
+  #                      systemctl restart httpd
+  #                      EOF
+  user_data_input     = templatefile("${path.module}/real_user_data.tftpl",
+  {
+    EC2_server_name = "EC2_Dev1"
+    DB_ENDPOINT = module.dev_database.db_endpoint
+    DB_USR = var.db_username
+    DB_PASSWRD = var.db_password
+    DEFAULT_DB_NAME = var.default_db_name
+  }
+  )
+
 }
 
 module "ec2_dev2" {
   source              = "../../ec2"
-  ec2_instance_name   = "${var.environment_name}-${var.region_name}-${var.availability_zones_suffix[1]}-ec2-instance"
-  ami_id              = var.ami_image_id
+  ec2_instance_name   = "${var.environment_name}-${var.region_name}-${var.availability_zones_suffices[1]}-ec2-instance"
+  ami_id              = module.ami_dev.ami_id
   instance_type       = var.instance_type
   subnet_id           = module.vpc_dev.Public_subnet_ids[1]
   volume_size         = var.volume_size_gb
@@ -78,15 +122,15 @@ module "ec2_dev2" {
   security_group_ids  = [module.dev_security_group.security_group_id]
   region_name         = var.region_name
   key_name_input      = "${module.key_pair_dev.key_pairname}"
-  user_data_input     = <<-EOF
-                        #!/bin/bash
-                        yum update -y
-                        yum install -y httpd
-                        systemctl start httpd
-                        systemctl enable httpd
-                        echo "Hello, World! From EC2 Dev2" > /var/www/html/index.html
-                        systemctl restart httpd
-                        EOF
+  user_data_input     = templatefile("${path.module}/real_user_data.tftpl",
+  {
+    EC2_server_name = "EC2_Dev2"
+    DB_ENDPOINT = module.dev_database.db_endpoint
+    DB_USR = var.db_username
+    DB_PASSWRD = var.db_password
+    DEFAULT_DB_NAME = var.default_db_name
+  }
+  )
 }
 
 module "alb_dev" {
@@ -101,7 +145,7 @@ module "alb_dev" {
 
 module "volume_dev" {
   source              = "../../ebs_volumes"
-  az_suffices         = var.availability_zones_suffix
+  az_suffices         = var.availability_zones_suffices
   env_name            = var.environment_name
   volume_size_gb      = var.ebs_volume_size_gb
   volume_type_name    = var.ebs_volume_type_name

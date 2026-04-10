@@ -8,7 +8,10 @@ resource "aws_security_group" "public_web_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    security_groups = [var.load_balancer_security_group_id]
+    #cidr_blocks = ["0.0.0.0/0"]  ##Allowing traffic from the entire internet to the load balancer, which is necessary for the load balancer to be accessible from the internet.
+    security_groups = [var.load_balancer_security_group_id] ## Temporarily allowing traffic from the entire internet 
+    ## to the load balancer for testing purposes, 
+    ## but in a production environment, it would be better to restrict this to only allow traffic from specific IP addresses or security groups for better security.
   }
 
   ingress {   ##Allow SSH traffic from the internet to the load balancer. This rule is not necessary for the load balancer to work, but it can be useful if you want to ssh into the EC2 instances for troubleshooting or other purposes.
@@ -26,6 +29,14 @@ resource "aws_security_group" "public_web_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+    
+  ingress {   ##For nodejs app traffic, if needed. This rule is not necessary for the load balancer to work, but it can be useful if you want to run docker in these instances and access the app directly without going through the load balancer.
+    description = "Allow app traffic"
+    from_port   = 3000
+    to_port     = 3100
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   egress {
     from_port   = 0
@@ -33,6 +44,14 @@ resource "aws_security_group" "public_web_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  egress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    security_groups = [var.rds_security_group_id]
+  }
+
 
   tags = {
     Name = "${var.project_name}-public-web-to_LB_SG"
